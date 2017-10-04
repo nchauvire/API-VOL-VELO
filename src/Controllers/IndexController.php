@@ -13,23 +13,17 @@ class IndexController extends Controller {
 
     public function getVolByVille(Request $request, Response $response, array $args){
 
-        if (! $args['city']) {
+        if (isset($args['city'])) {
             $args['city'] = 'nantes';
         }
 
-        $client = new Client();
-        $request = $client->request(
-            'GET',
-            "http://api.waqi.info/feed/{$args['city']}/?token=61d3602af69176305a80cefdc676225612d38d6a"
-        );
-        $iaqi = json_decode($request->getBody()->getContents(),true)['data']['iaqi'];
+        $collection = $this->getMongo()->selectDatabase('vols')->selectCollection('velo');
+
+        $list = $collection->find();
         $data = [];
-        foreach ($iaqi as $key => $val){
-            $data[$key] = $val['v'];
+        foreach ($list as $val){
+            $data[] = $val[0];
         }
-
-
-
         // Render index view
         return $response->withJson($data);
 
