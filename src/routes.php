@@ -18,3 +18,4 @@ $app->get('/', function (Request $request, Response $response, array $args) {
 $app->get('/vols[/{city}]', Src\Controllers\IndexController::class.":getVolByVille");
 
 $app->post('/vols', Src\Controllers\IndexController::class.":addVol");
+$app->get('/new/vol/[{lastVol}]', Src\Controllers\IndexController::class.":newVol");

@@ -1,9 +1,11 @@
 <?php
 namespace Src\Controllers;
 
+use function array_flip;
 use DateTime;
 use GuzzleHttp\Client;
 use function json_encode;
+use MongoDB\BSON\ObjectID;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use stdClass;
@@ -13,13 +15,12 @@ class IndexController extends Controller {
 
     public function getVolByVille(Request $request, Response $response, array $args){
 
-        if (isset($args['city'])) {
-            $args['city'] = 'nantes';
-        }
-
         $collection = $this->getMongo()->selectDatabase('vols')->selectCollection('velo');
-
-        $list = $collection->find();
+        if (isset($args['city'])) {
+            $list = $collection->find(['0.city'=>$args['city']]);
+        }else{
+            $list = $collection->find();
+        }
         $data = [];
         foreach ($list as $val){
             $data[] = $val[0];
@@ -49,6 +50,37 @@ class IndexController extends Controller {
         }else{
             return $response->withJson("Une erreur c'est produite lors de la creation du vol de velo", 500);
         }
+    }
+
+    public function newVol (Request $request, Response $response, array $args)
+    {
+
+        //$db = $this->getMongo()->selectDatabase('vols');
+        $db = $this->getMongo()->selectDatabase('vols');
+        $collection = $db->selectCollection('velo');
+        $result = $collection->find()->toArray();
+        $result = array_reverse ($result);
+        $newVol = null;
+        foreach ($result as $vol){
+
+            if(isset($args['lastVol'])){
+                if($args['lastVol'] != get_object_vars($vol['_id'])['oid']){
+                    $newVol['id'] = get_object_vars($vol['_id'])['oid'];
+                    $newVol['name'] = $vol[0]['name'];
+                    $newVol['date'] = $vol[0]['date'];
+                    $newVol['description'] = $vol[0]['description'];
+                    $newVol['city'] = $vol[0]['city'];
+                }
+            }else{
+                $newVol['id'] = get_object_vars($vol['_id'])['oid'];
+                $newVol['name'] = $vol[0]['name'];
+                $newVol['date'] = $vol[0]['date'];
+                $newVol['description'] = $vol[0]['description'];
+                $newVol['city'] = $vol[0]['city'];
+            }
+            break;
+        }
+        return $response->withJson($newVol, 200);
     }
 
 }
